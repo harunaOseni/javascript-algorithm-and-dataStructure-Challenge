@@ -1,85 +1,52 @@
+const currencyUnit = {
+  "PENNY": 1,
+  "NICKEL": 5,
+  "DIME": 10,
+  "QUARTER": 25,
+  "ONE": 100,
+  "FIVE": 500,
+  "TEN": 1000,
+  "TWENTY": 2000,
+  "ONE HUNDRED": 10000
+}
+
 function checkCashRegister(price, cash, cid) {
-    let output = { status: "", change: cid };
-  
-    const changeForCustomer = (cash - price).toFixed(2);
-  
-    const amountOfCashInDrawer = getTotalAmountOfCashInDrawer(cid);
-  
-    output.status = cashRegisterStatus(changeForCustomer, amountOfCashInDrawer, output);
-  
-    output.change = getCustomersChange(changeForCustomer, cid);
-  
-    if (changeForCustomer === amountOfCashInDrawer) {
-      output.status = "CLOSED";
-      output.change = [...cid];
-    } if (changeForCustomer > amountOfCashInDrawer) {
-      output.status = "OPEN";
-    } if (changeForCustomer > getTotalAmountOfCashInDrawer(output.change)) {
-      output.status = "INSUFFICIENT_FUNDS";
-      output.change = [];
+  let customersChange = (cash - price) * 100;
+  let originalCustomersChange = customersChange;
+  let status = ""; 
+  let change = [];
+
+  let totalAmountOfMoneyInDrawer = 0; 
+  let cashInDrawerStartingFromAHundredDenom = cid.filter(elem => e[1] !== 0).reverse();
+
+  cashInDrawerStartingFromAHundredDenom.forEach(elem => {
+    let denomName = elem[0]; 
+    let currentSumOfCashPerEachDenomInDrawer = elem[1] * 100;
+    totalAmountOfMoneyInDrawer += currentSumOfCashPerEachDenomInDrawer;
+    let amountOfChangeToBeGiven = 0;
+
+    while(customersChange >= currencyUnit[denomName]  && currentSumOfCashPerEachDenomInDrawer > 0){
+      amountOfChangeToBeGiven += currencyUnit[denomName];
+      customersChange -= currencyUnit[denomName]; 
+      currentSumOfCashPerEachDenomInDrawer -= currencyUnit[denomName]; 
     }
-  
-    return output;
-  };
-  const getTotalAmountOfCashInDrawer = (cashInDrawer) => {
-    let totalAmountInDrawer = 0;
-    for (let cash of cashInDrawer) {
-      let cashValue = cash[1];
-      totalAmountInDrawer += cashValue;
+
+    if(amountOfChangeToBeGiven > 0){
+      change.push([denomName, amountOfChangeToBeGiven / 100]);
     }
-    return totalAmountInDrawer.toFixed(2);
+  })
+
+  if(customersChange > 0){
+    status = 'INSUFFICIENT_FUNDS';
+    change = [];
+  } else if(customersChange == 0 && originalCustomersChange == totalAmountOfMoneyInDrawer){
+    status = 'CLOSED';
+    change = cid;
+  } else {
+    status = "OPEN";
   }
-  
-  const cashRegisterStatus = (customersMoney, totalAmountOfCashInDrawer, output) => {
-    if (totalAmountOfCashInDrawer < customersMoney) {
-      return output.change = "INSUFFICIENT_FUNDS";
-  
-    }
-  
-    if (totalAmountOfCashInDrawer > customersMoney) {
-      return output.change = "OPEN";
-    }
-  
-    if (totalAmountOfCashInDrawer === customersMoney) {
-      return output.change = "CLOSED";
-    }
-  }
-  
-  const getCustomersChange = (customersChange, cashInDrawer) => {
-    const changeResult = [];
-    const actualValueOfEachDenomination = {
-      "PENNY": 0.01,
-      "NICKEL": 0.05,
-      "DIME": 0.10,
-      "QUARTER": 0.25,
-      "ONE": 1.00,
-      "FIVE": 5.00,
-      "TEN": 10.00,
-      "TWENTY": 20.00,
-      "ONE HUNDRED": 100.00
-    };
-  
-    for (let i = cashInDrawer.length - 1; i >= 0; i--) {
-      const eachCashDenominationName = cashInDrawer[i][0];
-      const eachCashDenominationamount = cashInDrawer[i][1];
-      const eachcashDenominationValue = actualValueOfEachDenomination[eachCashDenominationName];
-      let numberOfCashInEachDenominations = (eachCashDenominationamount / eachcashDenominationValue).toFixed(2);
-      let numberOfCashDenominationToBeReturned = 0;
-  
-      while (customersChange >= eachcashDenominationValue && numberOfCashInEachDenominations > 0) {
-        customersChange -= eachcashDenominationValue;
-        customersChange = customersChange.toFixed(2);
-        numberOfCashInEachDenominations--;
-        numberOfCashDenominationToBeReturned++;
-      }
-  
-      if (numberOfCashDenominationToBeReturned > 0) {
-        changeResult.push([eachCashDenominationName, numberOfCashDenominationToBeReturned * eachcashDenominationValue]);
-      }
-    }
-  
-    return changeResult;
+
+  return { 'status': status, 'change': change };
   };
-  
-  
-  checkCashRegister(19.5, 20, [["PENNY", 1.01], ["NICKEL", 2.05], ["DIME", 3.1], ["QUARTER", 4.25], ["ONE", 90], ["FIVE", 55], ["TEN", 20], ["TWENTY", 60], ["ONE HUNDRED", 100]]);
+
+console.log(checkCashRegister(19.5, 20, [["PENNY", 1.01], ["NICKEL", 2.05], ["DIME", 3.1], ["QUARTER", 4.25], ["ONE", 90], ["FIVE", 55], ["TEN", 20], ["TWENTY", 60], ["ONE HUNDRED", 100]]));
